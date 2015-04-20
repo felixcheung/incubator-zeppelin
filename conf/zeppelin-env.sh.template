@@ -22,3 +22,15 @@
 # To configure pyspark, you need to set spark distribution's path to 'spark.home' property in Interpreter setting screen in Zeppelin GUI
 # export PYSPARK_PYTHON          # path to the python command. must be the same path on the driver(Zeppelin) and all workers.
 # export PYTHONPATH              # extra PYTHONPATH.
+
+# SparkR
+# JRI depends on R_HOME set in the environment.
+# Uncomment this line to run R to retrieve R_HOME (R must be in PATH) or set its value manually.
+# export R_HOME=`R RHOME`
+# export R_INCLUDE_DIR=`R CMD sh -c 'echo $R_INCLUDE_DIR'`
+# export R_SHARE_DIR=`R CMD sh -c 'echo $R_SHARE_DIR'`
+# export R_DOC_DIR=`R CMD sh -c 'echo $R_DOC_DIR'`
+# JRI_LD=`R -e 'system.file("jri",package="rJava")' --slave`  # this returns a R vector [1] "/usr/lib64/R/library/rJava/jri"
+# JRI_LD="${JRI_LD%\"}"
+# JRI_LD="${JRI_LD:5}"  # strip prefix [1] " from R
+# export LD_LIBRARY_PATH=`R CMD sh -c 'echo $LD_LIBRARY_PATH'`:$JRI_LD
