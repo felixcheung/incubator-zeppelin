@@ -89,7 +89,7 @@ public class SparkRInterpreter extends Interpreter {
     if (!sparkRRunning) {
       SparkRConf srcf = extractSparkConf(getSparkConf());
       if (srcf == null) {
-        logger.warn("Cannot get SparkConf - is Spark interpreter running?")
+        logger.warn("Cannot get SparkConf - is Spark interpreter running?");
       } else {
         try {
           initializeSparkR(srcf);
@@ -99,7 +99,7 @@ public class SparkRInterpreter extends Interpreter {
       }
     }
 
-    // TODO r.eval
+    // TODO(felixcheung): r.eval
   }
 
   @Override
@@ -169,7 +169,8 @@ public class SparkRInterpreter extends Interpreter {
     }
 
     // Ensure R and rJava package are installed - it should exit with code 0
-    String rJavaVersion = execAndCapture("R -e 'library(rJava); packageVersion(\"rJava\")' --slave");
+    String cmdLoadLibAndCheckVer = "R -e 'library(rJava); packageVersion(\"rJava\")' --slave";
+    String rJavaVersion = execAndCapture(cmdLoadLibAndCheckVer);
     if (!rJavaVersion.endsWith("‘0.9.7’")) {
       throw new InterpreterException("rJava package version 0.9.7 is required");
     }
@@ -177,7 +178,8 @@ public class SparkRInterpreter extends Interpreter {
     // Set java.library.path for native libraries required by rJava
     // eg. /usr/lib64/R/library/rJava/jri
     if (!System.getProperty("java.library.path").contains("jri")) {
-      String jriPath = execAndCapture("R -e 'system.file(\"jri\",package=\"rJava\")' --slave").substring(5, a.length()-1);
+      String cmdGetJriPath = "R -e 'system.file(\"jri\",package=\"rJava\")' --slave";
+      String jriPath = execAndCapture(cmdGetJriPath).substring(5, a.length()-1);
       System.setProperty("java.library.path", jriPath);
     }
 
@@ -218,7 +220,8 @@ public class SparkRInterpreter extends Interpreter {
     boolean first = true;
     StringBuffer sb = new StringBuffer("list(");
     for (scala.Tuple2<String,String> keyValue : scf.getAll()) {
-      String key = keyValue._1().trim();  // Trim should not be necessary for the key, but let's be safe
+      // Trim should not be necessary for the key, but let's be safe
+      String key = keyValue._1().trim();
       String value = keyValue._2().trim();
       if (key == "spark.master") {
         rconf.sparkMaster = value;
