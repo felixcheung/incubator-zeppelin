@@ -54,6 +54,28 @@ ZEPPELIN_PID="${ZEPPELIN_PID_DIR}/zeppelin-${ZEPPELIN_IDENT_STRING}-${HOSTNAME}.
 ZEPPELIN_MAIN=org.apache.zeppelin.server.ZeppelinServer
 JAVA_OPTS+=" -Dzeppelin.log.file=${ZEPPELIN_LOGFILE}"
 
+# construct classpath
+if [[ -d "${ZEPPELIN_HOME}/zeppelin-interpreter/target/classes" ]]; then
+  ZEPPELIN_CLASSPATH+=":${ZEPPELIN_HOME}/zeppelin-interpreter/target/classes"
+fi
+
+if [[ -d "${ZEPPELIN_HOME}/zeppelin-zengine/target/classes" ]]; then
+  ZEPPELIN_CLASSPATH+=":${ZEPPELIN_HOME}/zeppelin-zengine/target/classes"
+fi
+
+if [[ -d "${ZEPPELIN_HOME}/zeppelin-server/target/classes" ]]; then
+  ZEPPELIN_CLASSPATH+=":${ZEPPELIN_HOME}/zeppelin-server/target/classes"
+fi
+
+addJarInDir "${ZEPPELIN_HOME}"
+addJarInDir "${ZEPPELIN_HOME}/lib"
+addJarInDir "${ZEPPELIN_HOME}/zeppelin-interpreter/target/lib"
+addJarInDir "${ZEPPELIN_HOME}/zeppelin-zengine/target/lib"
+addJarInDir "${ZEPPELIN_HOME}/zeppelin-server/target/lib"
+addJarInDir "${ZEPPELIN_HOME}/zeppelin-web/target/lib"
+
+CLASSPATH+=":${ZEPPELIN_CLASSPATH}"
+
 if [[ "${ZEPPELIN_NICENESS}" = "" ]]; then
     export ZEPPELIN_NICENESS=0
 fi
@@ -79,19 +101,27 @@ function wait_for_zeppelin_to_die() {
   local pid
   local count
   pid=$1
+  timeout=$2
   count=0
-  while [[ "${count}" -lt 10 ]]; do
+  timeoutTime=$(date "+%s")
+  let "timeoutTime+=$timeout"
+  currentTime=$(date "+%s")
+  forceKill=1
+
+  while [[ $currentTime -lt $timeoutTime ]]; do
     $(kill ${pid} > /dev/null 2> /dev/null)
     if kill -0 ${pid} > /dev/null 2>&1; then
       sleep 3
-      let "count+=1"
     else
+      forceKill=0
       break
     fi
-  if [[ "${count}" == "5" ]]; then
+    currentTime=$(date "+%s")
+  done
+
+  if [[ forceKill -ne 0 ]]; then
     $(kill -9 ${pid} > /dev/null 2> /dev/null)
   fi
-  done
 }
 
 function wait_zeppelin_is_up_for_ci() {
@@ -165,7 +195,7 @@ function stop() {
     if [[ -z "${pid}" ]]; then
       echo "${ZEPPELIN_NAME} is not running"
     else
-      wait_for_zeppelin_to_die $pid
+      wait_for_zeppelin_to_die $pid 40
       $(rm -f ${ZEPPELIN_PID})
       action_msg "${ZEPPELIN_NAME} stop" "${SET_OK}"
     fi
@@ -178,7 +208,7 @@ function stop() {
     fi
 
     pid=$(cat ${f})
-    wait_for_zeppelin_to_die $pid
+    wait_for_zeppelin_to_die $pid 20
     $(rm -f ${f})
   done
 

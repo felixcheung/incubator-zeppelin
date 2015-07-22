@@ -15,9 +15,10 @@
 # limitations under the License.
 #
 
-import sys, getopt
+import sys, getopt, traceback
 
 from py4j.java_gateway import java_import, JavaGateway, GatewayClient
+from py4j.protocol import Py4JJavaError
 from pyspark.conf import SparkConf
 from pyspark.context import SparkContext
 from pyspark.rdd import RDD
@@ -31,7 +32,12 @@ from pyspark.serializers import MarshalSerializer, PickleSerializer
 from pyspark.sql import SQLContext, HiveContext, SchemaRDD, Row
 
 client = GatewayClient(port=int(sys.argv[1]))
-gateway = JavaGateway(client)
+sparkVersion = sys.argv[2]
+
+if sparkVersion.startswith("1.4"):
+  gateway = JavaGateway(client, auto_convert = True)
+else:
+  gateway = JavaGateway(client)
 
 java_import(gateway.jvm, "org.apache.spark.SparkEnv")
 java_import(gateway.jvm, "org.apache.spark.SparkConf")
@@ -44,12 +50,15 @@ intp.onPythonScriptInitialized()
 
 jsc = intp.getJavaSparkContext()
 
-if jsc.version().startswith("1.2"):
+if sparkVersion.startswith("1.2"):
   java_import(gateway.jvm, "org.apache.spark.sql.SQLContext")
   java_import(gateway.jvm, "org.apache.spark.sql.hive.HiveContext")
   java_import(gateway.jvm, "org.apache.spark.sql.hive.LocalHiveContext")
   java_import(gateway.jvm, "org.apache.spark.sql.hive.TestHiveContext")
-elif jsc.version().startswith("1.3"):
+elif sparkVersion.startswith("1.3"):
+  java_import(gateway.jvm, "org.apache.spark.sql.*")
+  java_import(gateway.jvm, "org.apache.spark.sql.hive.*")
+elif sparkVersion.startswith("1.4"):
   java_import(gateway.jvm, "org.apache.spark.sql.*")
   java_import(gateway.jvm, "org.apache.spark.sql.hive.*")
 
@@ -60,6 +69,7 @@ jconf = intp.getSparkConf()
 conf = SparkConf(_jvm = gateway.jvm, _jconf = jconf)
 sc = SparkContext(jsc=jsc, gateway=gateway, conf=conf)
 sqlc = SQLContext(sc, intp.getSQLContext())
+sqlContext = sqlc
 
 z = intp.getZeppelinContext()
 
@@ -85,9 +95,7 @@ while True :
   try:
     stmts = req.statements().split("\n")
     jobGroup = req.jobGroup()
-    single = None
-    incomplete = None
-    compiledCode = None
+    final_code = None
 
     for s in stmts:
       if s == None or len(s.strip()) == 0:
@@ -97,44 +105,24 @@ while True :
       if s.strip().startswith("#"):
         continue
 
-      if s[0] != " " and s[0] != "\t":
-        if incomplete != None:
-          raise incomplete
-
-        if compiledCode != None:
-          sc.setJobGroup(jobGroup, "Zeppelin")
-          eval(compiledCode)
-          compiledCode = None
-          single = None
-          incomplete = None
-
-      if single == None:
-        single = s
+      if final_code:
+        final_code += "\n" + s
       else:
-        single += "\n" + s
+        final_code = s
 
-      try :
-        compiledCode = compile(single, "<string>", "single")
-        incomplete = None
-      except SyntaxError as e:
-        if str(e).startswith("unexpected EOF while parsing") :
-          # incomplete expression
-          incomplete = e
-          continue
-        else :
-          # actual error
-          raise e
-
-    if incomplete != None:
-      raise incomplete
-
-    if compiledCode != None:
+    if final_code:
+      compiledCode = compile(final_code, "<string>", "exec")
       sc.setJobGroup(jobGroup, "Zeppelin")
       eval(compiledCode)
 
     intp.setStatementsFinished(output.get(), False)
+  except Py4JJavaError:
+    excInnerError = traceback.format_exc() # format_tb() does not return the inner exception
+    innerErrorStart = excInnerError.find("Py4JJavaError:")
+    if innerErrorStart > -1:
+       excInnerError = excInnerError[innerErrorStart:]
+    intp.setStatementsFinished(excInnerError + str(sys.exc_info()), True)
   except:
-    intp.setStatementsFinished(str(sys.exc_info()), True)
+    intp.setStatementsFinished(traceback.format_exc(), True)
 
   output.reset()
-    

@@ -49,10 +49,16 @@ fi
 
 ZEPPELIN_CLASSPATH+=":${ZEPPELIN_CONF_DIR}"
 
+# construct classpath
+if [[ -d "${ZEPPELIN_HOME}/zeppelin-interpreter/target/classes" ]]; then
+  ZEPPELIN_CLASSPATH+=":${ZEPPELIN_HOME}/zeppelin-interpreter/target/classes"
+fi
+
 addJarInDir "${ZEPPELIN_HOME}/zeppelin-interpreter/target/lib"
 addJarInDir "${INTERPRETER_DIR}"
 
-export CLASSPATH+=":${ZEPPELIN_CLASSPATH}"
+export SPARK_CLASSPATH+=":${ZEPPELIN_CLASSPATH}"
+CLASSPATH+=":${ZEPPELIN_CLASSPATH}"
 
 HOSTNAME=$(hostname)
 ZEPPELIN_SERVER=org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer
@@ -67,7 +73,19 @@ if [[ ! -d "${ZEPPELIN_LOG_DIR}" ]]; then
   $(mkdir -p "${ZEPPELIN_LOG_DIR}")
 fi
 
+if [[ ! -z "${SPARK_HOME}" ]]; then
+  PYSPARKPATH="${SPARK_HOME}/python/lib/pyspark.zip:${SPARK_HOME}/python/lib/py4j-0.8.2.1-src.zip"
+else
+  PYSPARKPATH="${ZEPPELIN_HOME}/interpreter/spark/pyspark/pyspark.zip:${ZEPPELIN_HOME}/interpreter/spark/pyspark/py4j-0.8.2.1-src.zip"
+fi
 
+if [[ x"" == x"${PYTHONPATH}" ]]; then
+  export PYTHONPATH="${PYSPARKPATH}"
+else
+  export PYTHONPATH="${PYTHONPATH}:${PYSPARKPATH}"
+fi
+
+unset PYSPARKPATH
 
 ${ZEPPELIN_RUNNER} ${JAVA_INTP_OPTS} -cp ${CLASSPATH} ${ZEPPELIN_SERVER} ${PORT} &
 pid=$!

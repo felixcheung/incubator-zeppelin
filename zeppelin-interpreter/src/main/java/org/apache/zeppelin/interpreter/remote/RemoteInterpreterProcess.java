@@ -17,15 +17,8 @@
 
 package org.apache.zeppelin.interpreter.remote;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteException;
-import org.apache.commons.exec.ExecuteResultHandler;
-import org.apache.commons.exec.ExecuteWatchdog;
+import com.google.gson.Gson;
+import org.apache.commons.exec.*;
 import org.apache.commons.exec.environment.EnvironmentUtils;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.thrift.TException;
@@ -35,36 +28,51 @@ import org.apache.zeppelin.interpreter.thrift.RemoteInterpreterService.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
  */
 public class RemoteInterpreterProcess implements ExecuteResultHandler {
-  Logger logger = LoggerFactory.getLogger(RemoteInterpreterProcess.class);
-  AtomicInteger referenceCount;
+  private static final Logger logger = LoggerFactory.getLogger(RemoteInterpreterProcess.class);
+  
+  private final AtomicInteger referenceCount;
   private DefaultExecutor executor;
   private ExecuteWatchdog watchdog;
   boolean running = false;
-  int port = -1;
-  private String interpreterRunner;
-  private String interpreterDir;
+  private int port = -1;
+  private final String interpreterRunner;
+  private final String interpreterDir;
 
   private GenericObjectPool<Client> clientPool;
   private Map<String, String> env;
-  private RemoteInterpreterEventPoller remoteInterpreterEventPoller;
-  private InterpreterContextRunnerPool interpreterContextRunnerPool;
+  private final RemoteInterpreterEventPoller remoteInterpreterEventPoller;
+  private final InterpreterContextRunnerPool interpreterContextRunnerPool;
+  private int connectTimeout;
 
   public RemoteInterpreterProcess(String intpRunner,
       String intpDir,
       Map<String, String> env,
-      InterpreterContextRunnerPool interpreterContextRunnerPool) {
+      int connectTimeout) {
+    this(intpRunner, intpDir, env, new RemoteInterpreterEventPoller(), connectTimeout);
+  }
+
+  RemoteInterpreterProcess(String intpRunner,
+      String intpDir,
+      Map<String, String> env,
+      RemoteInterpreterEventPoller remoteInterpreterEventPoller,
+      int connectTimeout) {
     this.interpreterRunner = intpRunner;
     this.interpreterDir = intpDir;
     this.env = env;
-    this.interpreterContextRunnerPool = interpreterContextRunnerPool;
+    this.interpreterContextRunnerPool = new InterpreterContextRunnerPool();
     referenceCount = new AtomicInteger(0);
+    this.remoteInterpreterEventPoller = remoteInterpreterEventPoller;
+    this.connectTimeout = connectTimeout;
   }
+
 
   public int getPort() {
     return port;
@@ -106,7 +114,7 @@ public class RemoteInterpreterProcess implements ExecuteResultHandler {
 
 
         long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 5 * 1000) {
+        while (System.currentTimeMillis() - startTime < connectTimeout) {
           if (RemoteInterpreterUtils.checkIfRemoteEndpointAccessible("localhost", port)) {
             break;
           } else {
@@ -116,10 +124,11 @@ public class RemoteInterpreterProcess implements ExecuteResultHandler {
             }
           }
         }
-
+        
         clientPool = new GenericObjectPool<Client>(new ClientFactory("localhost", port));
 
-        remoteInterpreterEventPoller = new RemoteInterpreterEventPoller(interpreterGroup, this);
+        remoteInterpreterEventPoller.setInterpreterGroup(interpreterGroup);
+        remoteInterpreterEventPoller.setInterpreterProcess(this);
         remoteInterpreterEventPoller.start();
       }
       return referenceCount.incrementAndGet();
@@ -154,10 +163,10 @@ public class RemoteInterpreterProcess implements ExecuteResultHandler {
         clientPool.clear();
         clientPool.close();
 
-        // wait for 3 sec and force kill
+        // wait for some time (connectTimeout) and force kill
         // remote process server.serve() loop is not always finishing gracefully
         long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 3 * 1000) {
+        while (System.currentTimeMillis() - startTime < connectTimeout) {
           if (this.isRunning()) {
             try {
               Thread.sleep(500);
@@ -227,7 +236,7 @@ public class RemoteInterpreterProcess implements ExecuteResultHandler {
    * @param name
    * @param o
    */
-  public void updateRemoteAngularObject(String name, Object o) {
+  public void updateRemoteAngularObject(String name, String noteId, Object o) {
     Client client = null;
     try {
       client = getClient();
@@ -240,7 +249,7 @@ public class RemoteInterpreterProcess implements ExecuteResultHandler {
 
     try {
       Gson gson = new Gson();
-      client.angularObjectUpdate(name, gson.toJson(o));
+      client.angularObjectUpdate(name, noteId, gson.toJson(o));
     } catch (TException e) {
       logger.error("Can't update angular object", e);
     } finally {

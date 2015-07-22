@@ -19,6 +19,7 @@ package org.apache.zeppelin.interpreter.remote;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
 
@@ -31,8 +32,9 @@ public class RemoteInterpreterProcessTest {
   @Test
   public void testStartStop() {
     InterpreterGroup intpGroup = new InterpreterGroup();
-    RemoteInterpreterProcess rip = new RemoteInterpreterProcess("../bin/interpreter.sh", "nonexists", new HashMap<String, String>(),
-        new InterpreterContextRunnerPool());
+    RemoteInterpreterProcess rip = new RemoteInterpreterProcess(
+        "../bin/interpreter.sh", "nonexists", new HashMap<String, String>(),
+        10 * 1000);
     assertFalse(rip.isRunning());
     assertEquals(0, rip.referenceCount());
     assertEquals(1, rip.reference(intpGroup));
@@ -47,8 +49,9 @@ public class RemoteInterpreterProcessTest {
   @Test
   public void testClientFactory() throws Exception {
     InterpreterGroup intpGroup = new InterpreterGroup();
-    RemoteInterpreterProcess rip = new RemoteInterpreterProcess("../bin/interpreter.sh", "nonexists", new HashMap<String, String>(),
-        new InterpreterContextRunnerPool());
+    RemoteInterpreterProcess rip = new RemoteInterpreterProcess(
+        "../bin/interpreter.sh", "nonexists", new HashMap<String, String>(),
+        mock(RemoteInterpreterEventPoller.class), 10 * 1000);
     rip.reference(intpGroup);
     assertEquals(0, rip.getNumActiveClient());
     assertEquals(0, rip.getNumIdleClient());
@@ -63,5 +66,4 @@ public class RemoteInterpreterProcessTest {
 
     rip.dereference();
   }
-
 }
