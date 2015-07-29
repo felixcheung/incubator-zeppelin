@@ -1,4 +1,17 @@
-package com.nflabs.zeppelin.spark;
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*       http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.apache.zeppelin.spark;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -31,9 +44,6 @@ import org.apache.zeppelin.interpreter.LazyOpenInterpreter;
 import org.apache.zeppelin.interpreter.WrappedInterpreter;
 import org.apache.zeppelin.interpreter.InterpreterResult.Code;
 
-/**
- *
- *//*
 public class SparkRInterpreter extends Interpreter {
   Logger logger = LoggerFactory.getLogger(SparkRInterpreter.class);
   boolean rRunning = false;
@@ -47,10 +57,7 @@ public class SparkRInterpreter extends Interpreter {
         new InterpreterPropertyBuilder()
           .add("spark.home",
                SparkInterpreter.getSystemDefault("SPARK_HOME", "spark.home", ""),
-               "Spark home path. Should be provided for SparkR")
-          .add("r.home",
-               SparkInterpreter.getSystemDefault("R_HOME", null, ""),
-               "R home path.").build());
+               "Spark home path. Should be provided for SparkR").build());
   }
 
   private class SparkRConf {
@@ -92,7 +99,7 @@ public class SparkRInterpreter extends Interpreter {
         logger.warn("Cannot get SparkConf - is Spark interpreter running?");
       } else {
         try {
-          initializeSparkR(srcf);
+          initializeSparkR(srcf, getProperty("spark.home"));
         } catch (Exception err) {
           return new InterpreterResult(Code.ERROR, "Cannot initialize SparkR");
         }
@@ -162,46 +169,32 @@ public class SparkRInterpreter extends Interpreter {
   }
 
   private void initializeR() {
-    // Get environment variables
-    String rHome = GetProperty("r.home");
-    if (rHome == "") {
-      throw new InterpreterException("R_HOME is not set in environment");
+    // Ensure R and rScala package are installed - it should exit with code 0
+    String cmdLoadLibAndCheckVer = "R -e 'library(rscala); packageVersion(\"rscala\")' --slave";
+    String rScalaVersion = execAndCapture(cmdLoadLibAndCheckVer);
+    if (!rScalaVersion.endsWith("‘1.0.6’")) {
+      throw new InterpreterException("rScala package version 1.0.6 is required");
     }
-
-    // Ensure R and rJava package are installed - it should exit with code 0
-    String cmdLoadLibAndCheckVer = "R -e 'library(rJava); packageVersion(\"rJava\")' --slave";
-    String rJavaVersion = execAndCapture(cmdLoadLibAndCheckVer);
-    if (!rJavaVersion.endsWith("‘0.9.7’")) {
-      throw new InterpreterException("rJava package version 0.9.7 is required");
-    }
-
-    // Set java.library.path for native libraries required by rJava
-    // eg. /usr/lib64/R/library/rJava/jri
-    if (!System.getProperty("java.library.path").contains("jri")) {
-      String cmdGetJriPath = "R -e 'system.file(\"jri\",package=\"rJava\")' --slave";
-      String jriPath = execAndCapture(cmdGetJriPath).substring(5, a.length()-1);
-      System.setProperty("java.library.path", jriPath);
-    }
-
-    initializeJri();
-  }
-
-  private void initializeJri() {
-
   }
 
   private void initializeSparkR(SparkRConf rconf, String sparkHome) {
     boolean loadSparkR = r.eval("require(SparkR)").asBool().isTRUE();
-    if (!loadSparkR)
+    if (!loadSparkR) {
       throw new InterpreterException("SparkR package not installed");
+    }
+
+    if (sparkHome == null || sparkHome.trim().isEmpty()) {
+      // try to get it from environment
+      sparkHome = System.getenv("SPARK_HOME")
+    }
 
     // sparkR.init(master = "local", appName = "SparkR",
     //  sparkHome = Sys.getenv("SPARK_HOME"), sparkEnvir = list(),
     //  sparkExecutorEnv = list(), sparkJars = "", sparkRLibDir = "")
-    String sparkR = String.format("sc <- sparkR.init(master=\"%s\",
+    String sparkRInit = String.format("sc <- sparkR.init(master=\"%s\",
     appName=\"%s\", sparkHome=\"%s\", sparkEnvir=%s, sparkJars=\"%s\")",
     rconf.sparkMaster, "zeppelin-SparkR", sparkHome, rconf.sparkEnvir, rconf.sparkJars);
-    r.eval(sparkR);
+    r.eval(sparkRInit);
   }
 
   // Get SparkConf from the existing SparkContext into R code
@@ -285,4 +278,3 @@ public class SparkRInterpreter extends Interpreter {
     return result;
   }
 }
-*/
