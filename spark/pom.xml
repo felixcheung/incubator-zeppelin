@@ -32,7 +32,7 @@
   <name>Zeppelin: Spark</name>
   <description>Zeppelin spark support</description>
   <url>http://zeppelin.incubator.apache.org</url>
-  
+
 
   <properties>
     <spark.version>1.4.0</spark.version>
@@ -135,116 +135,116 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <dependency>		
-        <groupId>org.apache.hadoop</groupId>		
-        <artifactId>hadoop-yarn-api</artifactId>		
-        <version>${yarn.version}</version>		
-        <exclusions>		
-          <exclusion>		
-            <groupId>asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.ow2.asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.jboss.netty</groupId>		
-            <artifactId>netty</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>commons-logging</groupId>		
-            <artifactId>commons-logging</artifactId>		
-          </exclusion>		
-        </exclusions>		
-      </dependency>		
-		
-      <dependency>		
-        <groupId>org.apache.hadoop</groupId>		
-        <artifactId>hadoop-yarn-common</artifactId>		
-        <version>${yarn.version}</version>		
-        <exclusions>		
-          <exclusion>		
-            <groupId>asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.ow2.asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.jboss.netty</groupId>		
-            <artifactId>netty</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>javax.servlet</groupId>		
-            <artifactId>servlet-api</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>commons-logging</groupId>		
-            <artifactId>commons-logging</artifactId>		
-          </exclusion>		
-        </exclusions>		
-      </dependency>		
-		
-      <dependency>		
-        <groupId>org.apache.hadoop</groupId>		
-        <artifactId>hadoop-yarn-server-web-proxy</artifactId>		
-        <version>${yarn.version}</version>		
-        <exclusions>		
-          <exclusion>		
-            <groupId>asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.ow2.asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.jboss.netty</groupId>		
-            <artifactId>netty</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>javax.servlet</groupId>		
-            <artifactId>servlet-api</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>commons-logging</groupId>		
-            <artifactId>commons-logging</artifactId>		
-          </exclusion>		
-        </exclusions>		
-      </dependency>		
-		
-      <dependency>		
-        <groupId>org.apache.hadoop</groupId>		
-        <artifactId>hadoop-yarn-client</artifactId>		
-        <version>${yarn.version}</version>		
-        <exclusions>		
-          <exclusion>		
-            <groupId>asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.ow2.asm</groupId>		
-            <artifactId>asm</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>org.jboss.netty</groupId>		
-            <artifactId>netty</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>javax.servlet</groupId>		
-            <artifactId>servlet-api</artifactId>		
-          </exclusion>		
-          <exclusion>		
-            <groupId>commons-logging</groupId>		
-            <artifactId>commons-logging</artifactId>		
-          </exclusion>		
-        </exclusions>		
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-api</artifactId>
+        <version>${yarn.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-common</artifactId>
+        <version>${yarn.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-server-web-proxy</artifactId>
+        <version>${yarn.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-client</artifactId>
+        <version>${yarn.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -722,6 +722,19 @@
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-yarn-api</artifactId>
           <version>${yarn.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>sparkr</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.ddahl.rscala</groupId>
+          <artifactId>rscale_1.0.6</artifactId>
+          <version>1.0.6</version>
+          <scope>system</scope>
+          <systemPath>${project.basedir}/rscala_2.10-1.0.6.jar</systemPath>
         </dependency>
       </dependencies>
     </profile>
