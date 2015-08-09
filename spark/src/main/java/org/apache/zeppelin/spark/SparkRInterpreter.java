@@ -15,15 +15,12 @@
 package org.apache.zeppelin.spark;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -118,8 +115,15 @@ public class SparkRInterpreter extends Interpreter {
       }
     }
 
+    // Capture output from scala.Console.println, which does not use System.out
+    ByteArrayOutputStream overrideStdout = new ByteArrayOutputStream();
+    PrintStream stdout = scala.Console.out();
+    scala.Console.setOut(new PrintStream(overrideStdout));
+
     rClient.eval(st);
-    return new InterpreterResult(Code.SUCCESS, "");
+    scala.Console.setOut(stdout);
+
+    return new InterpreterResult(Code.SUCCESS, overrideStdout.toString());
   }
 
   @Override
@@ -221,7 +225,7 @@ public class SparkRInterpreter extends Interpreter {
     //  sparkExecutorEnv = list(), sparkJars = "", sparkRLibDir = "")
     String sparkRInit = String.format("sc <- sparkR.init(master=\"%s\", "
       + "appName=\"%s\", sparkHome=\"%s\", sparkEnvir=%s, sparkJars=\"%s\")",
-      rconf.sparkMaster, "zeppelin-SparkR", sparkHome, rconf.sparkEnvir, rconf.sparkJars);
+      rconf.sparkMaster, "zeppelin-SparkR", sparkHome, ""/*rconf.sparkEnvir*/, rconf.sparkJars);
     logger.info(String.format("Initializing SparkR with: %s", sparkRInit));
 
     // Initialize SparkR
@@ -239,10 +243,6 @@ public class SparkRInterpreter extends Interpreter {
     excludeConf.add("spark.tachyonStore.folderName");
     excludeConf.add("spark.repl.class.uri");
     excludeConf.add("spark.fileserver.uri");
-    excludeConf.add("zeppelin.spark.useHiveContext");
-    excludeConf.add("zeppelin.spark.concurrentSQL")
-    excludeConf.add("zeppelin.pyspark.python")
-    excludeConf.add("zeppelin.dep.localrepo")
 
     SparkRConf rconf = new SparkRConf();
     boolean first = true;
@@ -257,7 +257,7 @@ public class SparkRInterpreter extends Interpreter {
       else if (key == "spark.jars") {
         rconf.sparkJars = value;
       }
-      else if (!excludeConf.contains(key) && !value.isEmpty()) {
+      else if (key.startsWith("spark.") && !excludeConf.contains(key) && !value.isEmpty()) {
         if (!first) {
           sb.append(", ");
         }
