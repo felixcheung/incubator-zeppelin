@@ -209,7 +209,7 @@ public class SparkRInterpreter extends Interpreter {
   }
 
   private void initializeSparkR(SparkRConf rconf, String sparkHome) {
-    // rClient != null
+    assert rClient != null;
     boolean loadSparkR = rClient.evalB0("require(SparkR)");
     if (!loadSparkR) {
       throw new InterpreterException("SparkR package not installed");
@@ -225,11 +225,14 @@ public class SparkRInterpreter extends Interpreter {
     //  sparkExecutorEnv = list(), sparkJars = "", sparkRLibDir = "")
     String sparkRInit = String.format("sc <- sparkR.init(master=\"%s\", "
       + "appName=\"%s\", sparkHome=\"%s\", sparkEnvir=%s, sparkJars=\"%s\")",
-      rconf.sparkMaster, "zeppelin-SparkR", sparkHome, ""/*rconf.sparkEnvir*/, rconf.sparkJars);
+      rconf.sparkMaster, "zeppelin-SparkR", sparkHome, rconf.sparkEnvir, rconf.sparkJars);
     logger.info(String.format("Initializing SparkR with: %s", sparkRInit));
 
     // Initialize SparkR
     rClient.eval(sparkRInit);
+
+    // If SparkR initialized, create sqlContext.
+    rClient.eval("sqlContext <- sparkRSQL.init(sc)");
   }
 
   // Get SparkConf from the existing SparkContext into R code
@@ -239,10 +242,17 @@ public class SparkRInterpreter extends Interpreter {
     HashSet excludeConf = new HashSet();
     excludeConf.add("spark.app.id");
     excludeConf.add("spark.app.name");
+    excludeConf.add("spark.driver.host");
     excludeConf.add("spark.driver.port");
-    excludeConf.add("spark.tachyonStore.folderName");
-    excludeConf.add("spark.repl.class.uri");
+    excludeConf.add("spark.driver.extraClassPath");
+    excludeConf.add("spark.executor.extraClassPath");
+    excludeConf.add("spark.externalBlockStore.folderName");
+    excludeConf.add("spark.files");
     excludeConf.add("spark.fileserver.uri");
+    excludeConf.add("spark.repl.class.uri");
+    excludeConf.add("spark.submit.pyArchives");
+    excludeConf.add("spark.tachyonStore.folderName");
+    excludeConf.add("spark.yarn.dist.files");
 
     SparkRConf rconf = new SparkRConf();
     boolean first = true;
