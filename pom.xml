@@ -89,6 +89,7 @@
     <module>markdown</module>
     <module>shell</module>
     <module>angular</module>
+    <module>rscala</module>
     <module>spark</module>
     <module>hive</module>
     <module>tajo</module>

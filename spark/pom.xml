@@ -731,10 +731,8 @@
       <dependencies>
         <dependency>
           <groupId>org.ddahl.rscala</groupId>
-          <artifactId>rscale_1.0.6</artifactId>
+          <artifactId>rscala_1.0.6</artifactId>
           <version>1.0.6</version>
-          <scope>system</scope>
-          <systemPath>${project.basedir}/rscala_2.10-1.0.6.jar</systemPath>
         </dependency>
       </dependencies>
     </profile>
