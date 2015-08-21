@@ -63,7 +63,7 @@ public class SparkRInterpreter extends Interpreter {
         new InterpreterPropertyBuilder()
           .add("spark.home",
                SparkInterpreter.getSystemDefault("SPARK_HOME", "spark.home", ""),
-               "Spark home path. Should be provided for SparkR").build());
+               "Spark home path. Must be provided for SparkR").build());
   }
 
   private class SparkRConf {
@@ -110,7 +110,8 @@ public class SparkRInterpreter extends Interpreter {
           initializeSparkR(srcf, getProperty("spark.home"));
           sparkRRunning = true;
         } catch (Exception err) {
-          return new InterpreterResult(Code.ERROR, "Cannot initialize SparkR");
+          err.printStackTrace();
+          return new InterpreterResult(Code.ERROR, "Cannot initialize SparkR: " + err.toString());
         }
       }
     }
@@ -210,14 +211,22 @@ public class SparkRInterpreter extends Interpreter {
 
   private void initializeSparkR(SparkRConf rconf, String sparkHome) {
     assert rClient != null;
-    boolean loadSparkR = rClient.evalB0("require(SparkR)");
-    if (!loadSparkR) {
-      throw new InterpreterException("SparkR package not installed");
-    }
 
     if (sparkHome == null || sparkHome.trim().isEmpty()) {
       // try to get it from environment
       sparkHome = System.getenv("SPARK_HOME");
+      if (sparkHome == null || sparkHome.trim().isEmpty()) {
+        throw new InterpreterException("SPARK_HOME must be set");
+      }
+    }
+
+    boolean loadSparkR = rClient.evalB0("require(SparkR)");
+    if (!loadSparkR) {
+      // Try again from SPARK_HOME
+      loadSparkR = rClient.evalB0("require(SparkR, lib.loc='" + sparkHome + "/R/lib')");
+      if (!loadSparkR) {
+        throw new InterpreterException("SparkR package is not installed or cannot be loaded");
+      }
     }
 
     // sparkR.init(master = "local", appName = "SparkR",
