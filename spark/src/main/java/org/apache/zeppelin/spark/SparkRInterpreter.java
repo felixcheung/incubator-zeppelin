@@ -63,7 +63,10 @@ public class SparkRInterpreter extends Interpreter {
         new InterpreterPropertyBuilder()
           .add("spark.home",
                SparkInterpreter.getSystemDefault("SPARK_HOME", "spark.home", ""),
-               "Spark home path. Must be provided for SparkR").build());
+               "Spark home path. Must be provided for SparkR")
+          .add("zeppelin.sparkr.packages",
+               SparkInterpreter.getSystemDefault(null, "zeppelin.sparkr.packages", ""),
+               "Spark packages to load with SparkR").build());
   }
 
   private class SparkRConf {
@@ -232,9 +235,12 @@ public class SparkRInterpreter extends Interpreter {
     // sparkR.init(master = "local", appName = "SparkR",
     //  sparkHome = Sys.getenv("SPARK_HOME"), sparkEnvir = list(),
     //  sparkExecutorEnv = list(), sparkJars = "", sparkRLibDir = "")
+    String sparkPackages = getProperty("zeppelin.sparkr.packages").trim();
     String sparkRInit = String.format("sc <- sparkR.init(master=\"%s\", "
-      + "appName=\"%s\", sparkHome=\"%s\", sparkEnvir=%s, sparkJars=\"%s\")",
-      rconf.sparkMaster, "zeppelin-SparkR", sparkHome, rconf.sparkEnvir, rconf.sparkJars);
+      + "appName=\"%s\", sparkHome=\"%s\", sparkEnvir=%s, "
+      + "sparkJars=\"%s\", sparkPackages = \"%s\")",
+      rconf.sparkMaster, "zeppelin-SparkR", sparkHome, rconf.sparkEnvir,
+      rconf.sparkJars, sparkPackages);
     logger.info(String.format("Initializing SparkR with: %s", sparkRInit));
 
     // Initialize SparkR

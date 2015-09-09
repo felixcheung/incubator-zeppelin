@@ -22,8 +22,8 @@ angular.module('zeppelinWebApp')
   $scope.paragraph = null;
   $scope.editor = null;
 
-  var editorMode = {scala: 'ace/mode/scala', sql: 'ace/mode/sql', markdown: 'ace/mode/markdown', 
-		  sh: 'ace/mode/sh'};
+  var editorMode = {scala: 'ace/mode/scala', sql: 'ace/mode/sql', markdown: 'ace/mode/markdown',
+		  sh: 'ace/mode/sh', r: 'ace/mode/r'};
 
   // Controller init
   $scope.init = function(newParagraph) {
@@ -449,6 +449,7 @@ angular.module('zeppelinWebApp')
       }
 
       var sqlModeTest = /^%(\w*\.)?\wql/;
+      var rModeTest = /^%(\w*\.)?sparkr/;
 
       $scope.setParagraphMode = function(session, paragraphText) {
         if (sqlModeTest.test(String(paragraphText))) {
@@ -457,6 +458,8 @@ angular.module('zeppelinWebApp')
           session.setMode(editorMode.markdown);
         } else if ( String(paragraphText).startsWith('%sh')) {
           session.setMode(editorMode.sh);
+        } else if (rModeTest.test(String(paragraphText))) {
+          session.setMode(editorMode.r);
         } else {
           session.setMode(editorMode.scala);
         }
@@ -590,7 +593,7 @@ angular.module('zeppelinWebApp')
 
   $scope.getProgress = function() {
     return ($scope.currentProgress) ? $scope.currentProgress : 0;
-  };                                           
+  };
 
   $scope.getExecutionTime = function() {
     var pdata = $scope.paragraph;
@@ -606,9 +609,9 @@ angular.module('zeppelinWebApp')
       desc += ' (outdated)';
     }
     return desc;
-  };  
+  };
 
-  $scope.isResultOutdated = function() {      
+  $scope.isResultOutdated = function() {
     var pdata = $scope.paragraph;
     if (pdata.dateUpdated !==undefined && Date.parse(pdata.dateUpdated) > Date.parse(pdata.dateStarted)){
       return true;
