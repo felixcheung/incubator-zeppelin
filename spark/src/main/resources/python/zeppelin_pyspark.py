@@ -164,9 +164,9 @@ class PySparkCompletion:
       print(json.dumps(list(filter(lambda x : not re.match("^__.*", x), list(completionList)))))
 
 
-output = Logger()
-sys.stdout = output
-sys.stderr = output
+zeppelin_output = Logger()
+sys.stdout = zeppelin_output
+sys.stderr = zeppelin_output
 
 client = GatewayClient(port=int(sys.argv[1]))
 sparkVersion = SparkVersion(int(sys.argv[2]))
@@ -244,4 +244,4 @@ while True :
   except:
     intp.setStatementsFinished(traceback.format_exc(), True)
 
-  output.reset()
+  zeppelin_output.reset()
